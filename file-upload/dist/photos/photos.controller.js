@@ -24,14 +24,19 @@ let PhotosController = class PhotosController {
             if (err)
                 console.log(err);
             else {
+                console.log(file, userName);
                 let dataObject = JSON.parse(data);
+                let tmp = [];
+                file.forEach(element => {
+                    tmp.push({
+                        userName: userName.userName,
+                        pathToImage: element.path,
+                        imageName: element.originalname
+                    });
+                });
                 var dataToAdd = [
                     ...dataObject,
-                    {
-                        userName: userName.userName,
-                        pathToImage: file.path,
-                        imageName: file.originalname
-                    }
+                    ...tmp
                 ];
                 let newData = JSON.stringify(dataToAdd);
                 (0, fs_1.writeFile)("db.json", newData, (err) => {
@@ -49,7 +54,7 @@ let PhotosController = class PhotosController {
 };
 __decorate([
     (0, common_1.Post)("upload"),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)("photo", {
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)("photo[]", 20, {
         storage: (0, multer_1.diskStorage)({
             destination: function (req, file, cb) {
                 cb(null, 'upload');
@@ -59,7 +64,7 @@ __decorate([
             }
         })
     })),
-    __param(0, (0, common_1.UploadedFile)()),
+    __param(0, (0, common_1.UploadedFiles)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),

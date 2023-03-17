@@ -1,5 +1,5 @@
-import { Body, Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Body, Controller, Post, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { readFile, readFileSync, writeFile } from 'fs';
 import { diskStorage } from 'multer';
 import {v4 as uuidv4} from 'uuid'
@@ -8,7 +8,7 @@ import {v4 as uuidv4} from 'uuid'
 export class PhotosController {
     @Post("upload")
     @UseInterceptors(
-        FileInterceptor("photo",{
+        FilesInterceptor("photo[]",20,{
             storage:diskStorage({
                 destination:function(req,file,cb){
                     cb(null,'upload')
@@ -19,19 +19,25 @@ export class PhotosController {
             })
         })
     )
-    uploadSingle(@UploadedFile() file,@Body() userName){
+    uploadSingle(@UploadedFiles() file,@Body() userName){
 
+    
         readFile("db.json","utf-8",(err,data)=>{
             if(err) console.log(err)
             else{
+                console.log(file,userName)
                 let dataObject=JSON.parse(data)
+                let tmp=[]
+                file.forEach(element => {
+                    tmp.push({
+                        userName:userName.userName,
+                        pathToImage:element.path,
+                        imageName:element.originalname
+                    })
+                });
                 var dataToAdd=[
                     ...dataObject,
-                    {
-                        userName:userName.userName,
-                        pathToImage:file.path,
-                        imageName:file.originalname
-                    }
+                    ...tmp
                 ]
 
                 let newData=JSON.stringify(dataToAdd)
@@ -39,7 +45,8 @@ export class PhotosController {
                     if(err) console.log(err)
                 })
             }
-        })
+        }
+        )
 
         const dataToAdd=readFileSync("db.json","utf-8")
             return {
