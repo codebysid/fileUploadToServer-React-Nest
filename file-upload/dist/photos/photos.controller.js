@@ -15,22 +15,54 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PhotosController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
+const fs_1 = require("fs");
+const multer_1 = require("multer");
+const uuid_1 = require("uuid");
 let PhotosController = class PhotosController {
-    uploadSingle(file) {
-        console.log(file);
+    uploadSingle(file, userName) {
+        (0, fs_1.readFile)("db.json", "utf-8", (err, data) => {
+            if (err)
+                console.log(err);
+            else {
+                let dataObject = JSON.parse(data);
+                var dataToAdd = [
+                    ...dataObject,
+                    {
+                        userName: userName.userName,
+                        pathToImage: file.path,
+                        imageName: file.originalname
+                    }
+                ];
+                let newData = JSON.stringify(dataToAdd);
+                (0, fs_1.writeFile)("db.json", newData, (err) => {
+                    if (err)
+                        console.log(err);
+                });
+            }
+        });
+        const dataToAdd = (0, fs_1.readFileSync)("db.json", "utf-8");
         return {
-            msg: "File Uploaded"
+            "msg": "File Uploaded",
+            "imageData": JSON.parse(dataToAdd)
         };
     }
 };
 __decorate([
     (0, common_1.Post)("upload"),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)("photo", {
-        dest: "./upload"
+        storage: (0, multer_1.diskStorage)({
+            destination: function (req, file, cb) {
+                cb(null, 'upload');
+            },
+            filename: (req, file, cb) => {
+                cb(null, (0, uuid_1.v4)() + file.originalname);
+            }
+        })
     })),
     __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], PhotosController.prototype, "uploadSingle", null);
 PhotosController = __decorate([
