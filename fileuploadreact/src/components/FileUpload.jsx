@@ -1,58 +1,101 @@
-import { data } from 'autoprefixer'
-import React, { useState } from 'react'
+import { data } from "autoprefixer";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import ShowFiles from "./ShowFiles";
+
+let formData = undefined;
 
 const FileUpload = () => {
-  const [file,setFile]=useState()
-  const [msg,setMsg]=useState(false)
 
-  const uploadFile=async(e)=>{
-    e.preventDefault()
+  const navigate=useNavigate()
+  const [file, setFile] = useState([]);
+  const [msg, setMsg] = useState({ msg: "", toShow: false });
+  const [imgSrc, setImgSrc] = useState([]);
+  const [userName, setUserName] = useState("");
+  const [allFiles, setAllFiles] = useState([]);
 
-    if(!file) return
+  const uploadFile = async (e) => {
+    e.preventDefault();
 
-    const formData=new FormData()
-    formData.append('photo',file)
+    if (!file) return;
+    formData.append("userName", userName);
 
-    const res=await fetch('http://localhost:3000/photos/upload',{
-      method:"POST",
-      body:formData
-    })
+    const res = await fetch("http://localhost:3000/photos/upload", {
+      method: "POST",
+      body: formData,
+    });
 
-    const data=await res.json()
+    const data = await res.json();
 
-    if(data.msg==="File Uploaded"){
-      setMsg(true)
+    if (data.msg === "File Uploaded") {
+      setAllFiles(data.imageData);
+      setMsg({
+        msg: "File Uploaded 👍🏻",
+        toShow: true,
+      });
+
       setTimeout(() => {
-        setMsg(false)
+        setMsg({
+          msg: "",
+          toShow: false,
+        });
+        setImgSrc([]);
+        setFile([]);
       }, 3000);
-    }else{
-      setMsg(false)
-    }
-  }
+    } else setMsg(false);
+  };
 
+  useEffect(() => {
+    formData = new FormData();
+
+    file.length > 0 &&
+      file.map((ele, key) => {
+        if (ele.size > 5242880) {
+          setMsg({
+            msg: "File size is greater then 5mb, Try Another ❌",
+            toShow: true,
+          });
+          return;
+        }
+        const url = URL.createObjectURL(ele);
+        setImgSrc((prev) => (prev ? [...prev, url] : [url]));
+        formData.append("photo[]", ele);
+      });
+  }, [file]);
   return (
     <div
-    className='
+      className="
     text-white
-    h-screen
+    h-full
     flex
+    flex-col
     justify-center
     items-center
-    bg-zinc-900
-    '
+    gap-10
+    p-10
+    "
     >
-      <form 
-      className='
+      <form
+        className="
       flex
       flex-col
       justify-center
       items-centr
       gap-8
-      '
-      onSubmit={uploadFile}>
+      "
+        onSubmit={uploadFile}
+      >
+        <input
+          className="text-black outline-none p-4 rounded-md"
+          type="text"
+          placeholder="Enter UserName"
+          onChange={(e) => setUserName(e.target.value)}
+          value={userName}
+          required
+        />
 
-        <label
-        className='
+      <label
+          className="
         border-2
         border-dashed
         border-blue-500
@@ -63,63 +106,110 @@ const FileUpload = () => {
         items-center
         flex-col
         hover:cursor-pointer
-        '
+        "
         >
           <span>Click to Select File</span>
           <input
-          className='
+            className="
           hidden
-          '
-          type="file" name="" id="file" onChange={(e)=>setFile(e.target.files[0])}/>
+          "
+            type="file"
+            multiple
+            accept="image/*"
+            name=""
+            id="file"
+            onChange={(e) => {
+              setFile(Array.from(e.target.files));
+            }}
+          />
 
-        {
-          file?<span
-          className='
+          {file ? (
+            <span
+              className="
            text-blue-500
            mt-6
            italic
-          '
-          >Selected File: {file.name}</span>:<span
-          className='
+          "
+            >
+              Selected File: {file.name}
+            </span>
+          ) : (
+            <span
+              className="
            text-blue-500
            mt-6
            italic
-          '
-          >No File Selected</span>
-        }
+          "
+            >
+              No File Selected
+            </span>
+          )}
         </label>
 
-
         <button
-        className='
-        border
-        border-blue-500
-        p-2
-        rounded-md
-        hover:bg-blue-500
-        transition-all
-        duration-500
-        ease-in-out
+          type="submit"
+          className="
+        customBtn
         flex 
         justify-center
         items-center
         gap-2
-        '
+        "
         >
-        📄 Upload File to Server</button>
+          📄 Upload File to Server
+        </button>
 
-      {
-        msg?
-        <span
-        className='
+        {msg.toShow ? (
+          <span
+            className="
         text-white
         text-center
-        '
-        >File Uploaded 👍🏻</span>:null
-      }
+        "
+          >
+            {msg.msg}
+          </span>
+        ) : null}
       </form>
-    </div>
-  )
-}
 
-export default FileUpload
+      <div
+        className="
+      flex
+      flex-row
+      flex-wrap
+      gap-4
+      w-9/12
+      justify-center
+      items-center
+      "
+      >
+        {imgSrc
+          ? imgSrc.map((ele, key) => {
+              return (
+                <img
+                  key={key}
+                  className="
+              max-w-lg
+              max-h-64
+              "
+                  src={ele}
+                />
+              );
+            })
+          : null}
+      </div>
+      <div className="flex gap-6">
+        <ShowFiles allFiles={allFiles} />
+
+        <button 
+        onClick={()=>navigate("/videoUpload")}
+        className="customBtn justify-center" 
+        type="button">
+          Upload Video
+        </button>
+
+      </div>
+    </div>
+  );
+};
+
+export default FileUpload;

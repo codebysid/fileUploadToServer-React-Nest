@@ -51,6 +51,42 @@ let PhotosController = class PhotosController {
             "imageData": JSON.parse(dataToAdd)
         };
     }
+    uploadVideo(file, userName) {
+        (0, fs_1.readFile)("db2.json", "utf-8", (err, data) => {
+            if (err)
+                console.log(err);
+            else {
+                console.log(file, userName);
+                let dataObject = JSON.parse(data);
+                let tmp = [];
+                file.forEach(element => {
+                    tmp.push({
+                        userName: userName.userName,
+                        pathToVideo: element.path,
+                        videoName: element.originalname
+                    });
+                });
+                var dataToAdd = [
+                    ...dataObject,
+                    ...tmp
+                ];
+                let newData = JSON.stringify(dataToAdd);
+                (0, fs_1.writeFile)("db2.json", newData, (err) => {
+                    if (err)
+                        console.log(err);
+                });
+            }
+        });
+        return {
+            msg: "Video Uploaded"
+        };
+    }
+    fetchVideos() {
+        const dataToAdd = (0, fs_1.readFileSync)("db2.json", "utf-8");
+        return {
+            "imageData": JSON.parse(dataToAdd)
+        };
+    }
 };
 __decorate([
     (0, common_1.Post)("upload"),
@@ -70,6 +106,30 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], PhotosController.prototype, "uploadSingle", null);
+__decorate([
+    (0, common_1.Post)("video"),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)("video", 20, {
+        storage: (0, multer_1.diskStorage)({
+            destination: function (req, file, cb) {
+                cb(null, 'upload');
+            },
+            filename: (req, file, cb) => {
+                cb(null, (0, uuid_1.v4)() + file.originalname);
+            }
+        })
+    })),
+    __param(0, (0, common_1.UploadedFiles)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], PhotosController.prototype, "uploadVideo", null);
+__decorate([
+    (0, common_1.Post)('fetchVideos'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PhotosController.prototype, "fetchVideos", null);
 PhotosController = __decorate([
     (0, common_1.Controller)('photos')
 ], PhotosController);

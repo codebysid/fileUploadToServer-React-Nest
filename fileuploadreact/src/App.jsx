@@ -2,13 +2,18 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import './App.css'
 import FileUpload from './components/FileUpload'
+import {Routes , Route} from 'react-router-dom'
+import VideoUpload from './components/VideoUpload'
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <div className="App">
-      <FileUpload/>
+      <Routes>
+        <Route path='/' exact element={<FileUpload/>}/>
+        <Route path='/videoUpload' element={<VideoUpload/>}/>
+      </Routes>
+
     </div>
   )
 }

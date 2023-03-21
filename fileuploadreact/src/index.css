@@ -2,3 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+body{
+    background-color: #171717;
+    color:white;
+}
+
+.customBtn{
+    @apply border border-blue-500 p-2 rounded-md hover:bg-blue-500 transition-all duration-500 ease-in-out
+}
